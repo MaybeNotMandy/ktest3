@@ -15,15 +15,15 @@ local Themes = {
         ElementColor = Color3.fromRGB(20, 20, 20)
     },
     LightTheme = {
-        SchemeColor = Color3.fromRGB(150, 150, 150),
-        Background = Color3.fromRGB(255, 255, 255),
+        SchemeColor = Color3.fromRGB(0, 0, 0),
+        Background = Color3.fromRGB(0, 0, 0),
         Header = Color3.fromRGB(200, 200, 200),
         TextColor = Color3.fromRGB(0, 0, 0),
         ElementColor = Color3.fromRGB(224, 224, 224)
     },
     BloodTheme = {
         SchemeColor = Color3.fromRGB(227, 27, 27),
-        Background = Color3.fromRGB(10, 10, 10),
+        Background = Color3.fromRGB(0, 0, 0),
         Header = Color3.fromRGB(5, 5, 5),
         TextColor = Color3.fromRGB(255, 255, 255),
         ElementColor = Color3.fromRGB(20, 20, 20)
@@ -127,17 +127,17 @@ function SimpleKavo.CreateLib(title, themeName)
     Title.TextSize = 16
     Title.TextXAlignment = Enum.TextXAlignment.Left
     
-    -- Theme Dropdown
     local ThemeDropdownFrame = Instance.new("Frame")
     ThemeDropdownFrame.Parent = Header
     ThemeDropdownFrame.BackgroundTransparency = 1
     ThemeDropdownFrame.Position = UDim2.new(0.5, 0, 0, 0)
     ThemeDropdownFrame.Size = UDim2.new(0.35, 0, 1, 0)
+    ThemeDropdownFrame.ZIndex = 5
     
     local ThemeButton = Instance.new("TextButton")
     ThemeButton.Parent = ThemeDropdownFrame
     ThemeButton.BackgroundColor3 = currentTheme.ElementColor
-    ThemeButton.Size = UDim2.new(1, -10, 0, 20)
+    ThemeButton.Size = UDim2.new(1, 0, 0, 20)
     ThemeButton.Position = UDim2.new(0, 5, 0.25, 0)
     ThemeButton.Font = Enum.Font.Gotham
     ThemeButton.Text = themeName or "DefaultTheme"
@@ -156,6 +156,7 @@ function SimpleKavo.CreateLib(title, themeName)
     ThemeOptionsFrame.Size = UDim2.new(1, -10, 0, 0)
     ThemeOptionsFrame.Visible = false
     ThemeOptionsFrame.ClipsDescendants = true
+    ThemeOptionsFrame.ZIndex = 10
     
     local ThemeOptionsCorner = Instance.new("UICorner")
     ThemeOptionsCorner.CornerRadius = UDim.new(0, 4)
@@ -172,7 +173,6 @@ function SimpleKavo.CreateLib(title, themeName)
         currentTheme = Themes[newThemeName]
         ThemeButton.Text = newThemeName
         
-        -- Update all UI elements with new theme colors
         Main.BackgroundColor3 = currentTheme.Background
         Header.BackgroundColor3 = currentTheme.Header
         Title.TextColor3 = currentTheme.TextColor
@@ -181,7 +181,6 @@ function SimpleKavo.CreateLib(title, themeName)
         ThemeOptionsFrame.BackgroundColor3 = currentTheme.ElementColor
         TabsScroll.ScrollBarImageColor3 = currentTheme.SchemeColor
         
-        -- Update tab buttons and content
         for _, tab in pairs(TabsHolder:GetChildren()) do
             if tab:IsA("TextButton") then
                 tab.TextColor3 = currentTheme.TextColor
@@ -189,7 +188,6 @@ function SimpleKavo.CreateLib(title, themeName)
             end
         end
         
-        -- Update content elements recursively
         local function updateContent(frame)
             for _, child in pairs(frame:GetChildren()) do
                 if child:IsA("TextLabel") or child:IsA("TextButton") then
@@ -225,6 +223,7 @@ function SimpleKavo.CreateLib(title, themeName)
             OptionButton.TextColor3 = currentTheme.TextColor
             OptionButton.TextSize = 12
             OptionButton.AutoButtonColor = false
+            OptionButton.ZIndex = 11
             
             local OptionCorner = Instance.new("UICorner")
             OptionCorner.CornerRadius = UDim.new(0, 4)
@@ -770,57 +769,89 @@ function SimpleKavo.CreateLib(title, themeName)
                 return DropdownFrame
             end
             
-            function SectionFunctions:NewSlider(name, min, max, default, callback)
+            function SectionFunctions:NewSlider(name, min, max, default, description, callback)
                 local elementOrder = #SectionContent:GetChildren()
+                local currentValue = math.clamp(default or min, min, max)
                 
+                -- Frame principal do slider
                 local SliderFrame = Instance.new("Frame")
-                SliderFrame.Name = name.."_Slider"
+                SliderFrame.Name = name .. "_Slider"
+                SliderFrame.Parent = SectionContent
                 SliderFrame.BackgroundTransparency = 1
-                SliderFrame.Size = UDim2.new(1, 0, 0, 50)
+                SliderFrame.Size = UDim2.new(1, 0, 0, description and 60 or 40)
                 SliderFrame.LayoutOrder = elementOrder
                 
+                -- Texto do slider (nome e valor)
                 local SliderText = Instance.new("TextLabel")
                 SliderText.Name = "Text"
                 SliderText.Parent = SliderFrame
                 SliderText.BackgroundTransparency = 1
-                SliderText.Size = UDim2.new(1, 0, 0.4, 0)
+                SliderText.Position = UDim2.new(0, 10, 0, 0)
+                SliderText.Size = UDim2.new(1, -20, 0, 20)
                 SliderText.Font = Enum.Font.Gotham
-                SliderText.Text = name..": "..default
+                SliderText.Text = name .. ": " .. string.format("%.2f", currentValue)
                 SliderText.TextColor3 = currentTheme.TextColor
                 SliderText.TextSize = 14
                 SliderText.TextXAlignment = Enum.TextXAlignment.Left
                 
+                -- Descrição (opcional)
+                if description then
+                    local DescLabel = Instance.new("TextLabel")
+                    DescLabel.Name = "Description"
+                    DescLabel.Parent = SliderFrame
+                    DescLabel.BackgroundTransparency = 1
+                    DescLabel.Position = UDim2.new(0, 10, 0, 20)
+                    DescLabel.Size = UDim2.new(1, -20, 0, 15)
+                    DescLabel.Font = Enum.Font.Gotham
+                    DescLabel.Text = description
+                    DescLabel.TextColor3 = currentTheme.TextColor
+                    DescLabel.TextSize = 10
+                    DescLabel.TextXAlignment = Enum.TextXAlignment.Left
+                end
+                
+                -- Barra de fundo do slider
                 local SliderBar = Instance.new("Frame")
                 SliderBar.Name = "Bar"
                 SliderBar.Parent = SliderFrame
                 SliderBar.BackgroundColor3 = currentTheme.ElementColor
-                SliderBar.Size = UDim2.new(1, 0, 0.2, 0)
-                SliderBar.Position = UDim2.new(0, 0, 0.6, 0)
+                SliderBar.Size = UDim2.new(1, -20, 0, 8)
+                SliderBar.Position = UDim2.new(0, 10, 1, -15)
+                SliderBar.BorderSizePixel = 0
                 
-                local SliderCorner = Instance.new("UICorner")
-                SliderCorner.Parent = SliderBar
+                local BarCorner = Instance.new("UICorner")
+                BarCorner.CornerRadius = UDim.new(0, 4)
+                BarCorner.Parent = SliderBar
                 
+                -- Barra de preenchimento
                 local SliderFill = Instance.new("Frame")
                 SliderFill.Name = "Fill"
                 SliderFill.Parent = SliderBar
                 SliderFill.BackgroundColor3 = currentTheme.SchemeColor
-                SliderFill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0)
+                SliderFill.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
+                SliderFill.BorderSizePixel = 0
                 
-                local SliderFillCorner = Instance.new("UICorner")
-                SliderFillCorner.Parent = SliderFill
+                local FillCorner = Instance.new("UICorner")
+                FillCorner.CornerRadius = UDim.new(0, 4)
+                FillCorner.Parent = SliderFill
                 
                 local dragging = false
                 
-                local function UpdateSlider(value)
-                    local percent = math.clamp((value - min)/(max - min), 0, 1)
+                -- Função para atualizar o slider
+                local function updateSlider(inputX)
+                    local barPositionX = SliderBar.AbsolutePosition.X
+                    local barWidth = SliderBar.AbsoluteSize.X
+                    local percent = math.clamp((inputX - barPositionX) / barWidth, 0, 1)
+                    currentValue = min + (max - min) * percent
                     Tween(SliderFill, {Size = UDim2.new(percent, 0, 1, 0)}, 0.1)
-                    SliderText.Text = name..": "..math.floor(value)
-                    if callback then callback(value) end
+                    SliderText.Text = name .. ": " .. string.format("%.2f", currentValue)
+                    if callback then callback(currentValue) end
                 end
                 
+                -- Eventos de interação
                 SliderBar.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                         dragging = true
+                        updateSlider(input.Position.X)
                     end
                 end)
                 
@@ -832,14 +863,13 @@ function SimpleKavo.CreateLib(title, themeName)
                 
                 UserInputService.InputChanged:Connect(function(input)
                     if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                        local pos = input.Position.X - SliderBar.AbsolutePosition.X
-                        local percent = math.clamp(pos/SliderBar.AbsoluteSize.X, 0, 1)
-                        local value = min + (max - min) * percent
-                        UpdateSlider(value)
+                        updateSlider(input.Position.X)
                     end
                 end)
                 
-                SliderFrame.Parent = SectionContent
+                -- Inicializa o slider com o valor padrão
+                updateSlider(SliderBar.AbsolutePosition.X + ((currentValue - min) / (max - min)) * SliderBar.AbsoluteSize.X)
+                
                 return SliderFrame
             end
             
